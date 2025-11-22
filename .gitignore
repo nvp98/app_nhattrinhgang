@@ -1,0 +1,23 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# Platform build
+android/.gradle/
+ios/Pods/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Env files
+assets/.env
+
+# Generated plugin registrant
+**/GeneratedPluginRegistrant.*
