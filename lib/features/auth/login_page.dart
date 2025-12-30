@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nhattrinhgang_mobile/core/stores/localstore.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>(
   (ref) => AuthNotifier(),
@@ -36,11 +37,45 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     if (_formKey.currentState?.validate() != true) return;
-    final notifier = ref.read(authProvider.notifier);
-    await notifier.signIn(_emailCtrl.text.trim(), _passwordCtrl.text);
-    if (mounted) context.go('/home');
+
+    final username = _emailCtrl.text.trim();
+
+    await ref.read(authProvider.notifier).signIn(username, _passwordCtrl.text);
+
+    final authState = ref.read(authProvider);
+
+    authState.when(
+      data: (_) async {
+        // Lưu local
+        await LocalStore.saveUsername(username);
+
+        // 👉 THÔNG BÁO THÀNH CÔNG
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Đăng nhập thành công'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+
+        // 👉 Delay ngắn rồi chuyển màn
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) context.go('/home');
+      },
+      error: (err, _) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ ${err.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      loading: () {},
+    );
   }
 
   @override
@@ -65,7 +100,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Card(
                   elevation: 8,
                   shadowColor: Colors.black26,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24)),
                   clipBehavior: Clip.antiAlias,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -91,15 +127,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: const [
-                                    BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 6)),
+                                    BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 12,
+                                        offset: Offset(0, 6)),
                                   ],
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Image.asset(
-                                    'assets/logo_hoa_phat.png',
+                                    'logo_hoa_phat.png',
                                     fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stack) => const FlutterLogo(),
+                                    errorBuilder: (context, error, stack) =>
+                                        const FlutterLogo(),
                                   ),
                                 ),
                               ),
@@ -115,89 +155,149 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Login',
-                                style: theme.textTheme.headlineMedium,
+                                'NHẬT TRÌNH GANG',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 4),
                               Text(
-                                'Sign in to continue.',
-                                style: theme.textTheme.bodyMedium,
+                                'Đăng nhập hệ thống',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
                                 textAlign: TextAlign.center,
                               ),
+                              // Text(
+                              //   'ĐĂNG NHẬP',
+                              //   style: theme.textTheme.headlineMedium,
+                              //   textAlign: TextAlign.center,
+                              // ),
+                              const SizedBox(height: 6),
+                              // Text(
+                              //   'Sign in to continue.',
+                              //   style: theme.textTheme.bodyMedium,
+                              //   textAlign: TextAlign.center,
+                              // ),
                               const SizedBox(height: 20),
-                        Text(
-                          'NAME',
-                          style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                        ),
+                              Text(
+                                'Mã nhân viên / Mã tàu',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700]),
+                              ),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _emailCtrl,
-                                decoration: const InputDecoration(
-                                  hintText: 'name@company.com',
-                                  prefixIcon: Icon(Icons.person_outline),
+                                enabled: !authState.isLoading,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  // fontWeight: FontWeight.w600,
+                                  letterSpacing: 1,
                                 ),
-                                textInputAction: TextInputAction.next,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (v) => v == null || v.isEmpty ? 'Nhập email' : null,
+                                decoration: InputDecoration(
+                                  hintText: 'VD: HPDQ12345',
+                                  prefixIcon: const Icon(Icons.badge_outlined,
+                                      size: 28),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade50,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 16,
+                                  ),
+                                ),
+                                textInputAction: TextInputAction.done,
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Vui lòng nhập mã nhân viên'
+                                    : null,
+                                onFieldSubmitted: (_) => _submit(),
                               ),
                               const SizedBox(height: 16),
-                              Text(
-                                'PASSWORD',
-                                style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                              ),
+                              // Text(
+                              //   'PASSWORD',
+                              //   style: theme.textTheme.labelSmall?.copyWith(
+                              //       fontWeight: FontWeight.w600,
+                              //       color: Colors.grey[700]),
+                              // ),
+                              // const SizedBox(height: 8),
+                              // TextFormField(
+                              //   controller: _passwordCtrl,
+                              //   decoration: InputDecoration(
+                              //     hintText: '••••••••',
+                              //     prefixIcon: const Icon(Icons.lock_outline),
+                              //     suffixIcon: IconButton(
+                              //       onPressed: () =>
+                              //           setState(() => _obscure = !_obscure),
+                              //       icon: Icon(_obscure
+                              //           ? Icons.visibility
+                              //           : Icons.visibility_off),
+                              //     ),
+                              //   ),
+                              //   obscureText: _obscure,
+                              //   textInputAction: TextInputAction.done,
+                              //   validator: (v) => v == null || v.isEmpty
+                              //       ? 'Nhập mật khẩu'
+                              //       : null,
+                              //   onFieldSubmitted: (_) => _submit(),
+                              // ),
+                              const SizedBox(height: 16),
+                              // Align(
+                              //   alignment: Alignment.centerRight,
+                              //   child: TextButton(
+                              //     onPressed: authState.isLoading ? null : () {},
+                              //     child: const Text('Quên mật khẩu?'),
+                              //   ),
+                              // ),
                               const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _passwordCtrl,
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              onPressed: () => setState(() => _obscure = !_obscure),
-                              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                            ),
-                          ),
-                          obscureText: _obscure,
-                          textInputAction: TextInputAction.done,
-                          validator: (v) => v == null || v.isEmpty ? 'Nhập mật khẩu' : null,
-                          onFieldSubmitted: (_) => _submit(),
-                        ),
-                        const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: authState.isLoading ? null : () {},
-                            child: const Text('Quên mật khẩu?'),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: authState.isLoading ? null : _submit,
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.black87, foregroundColor: Colors.white),
-                            child: authState.isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Text('Log in'),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 4,
-                          children: [
-                            const Text('Chưa có tài khoản?'),
-                            TextButton(
-                              onPressed: authState.isLoading ? null : () {},
-                              child: const Text('Signup!'),
-                            ),
-                          ],
-                        ),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      authState.isLoading ? null : _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0B2545),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  child: authState.isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text('XÁC NHẬN'),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Wrap(
+                              //   alignment: WrapAlignment.center,
+                              //   spacing: 4,
+                              //   children: [
+                              //     const Text('Chưa có tài khoản?'),
+                              //     TextButton(
+                              //       onPressed:
+                              //           authState.isLoading ? null : () {},
+                              //       child: const Text('Signup!'),
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),

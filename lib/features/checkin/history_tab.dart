@@ -11,20 +11,26 @@ class HistoryTab extends ConsumerStatefulWidget {
 class _HistoryTabState extends ConsumerState<HistoryTab> {
   DateTime _selectedDate = DateTime.now();
 
-  bool _sameDate(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+  bool _sameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final items = ref.watch(checkinProvider).where((r) => _sameDate(r.time, _selectedDate)).toList();
+    final items = ref
+        .watch(checkinProvider)
+        .where((r) => _sameDate(r.time, _selectedDate))
+        .toList();
 
     final marks = <String, Map<SteelStage, StageMark>>{};
     for (final r in items) {
-      marks.putIfAbsent(r.bin, () => {
-            SteelStage.gang: StageMark(),
-            SteelStage.choThep: StageMark(),
-            SteelStage.raThep: StageMark(),
-          });
+      marks.putIfAbsent(
+          r.bin,
+          () => {
+                SteelStage.gang: StageMark(),
+                SteelStage.choThep: StageMark(),
+                SteelStage.raThep: StageMark(),
+              });
       final m = marks[r.bin]![r.stage]!;
       if (r.action == FlowAction.checkin) {
         m.inDone = true;
@@ -48,7 +54,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.schedule, size: 16, color: tint),
           const SizedBox(width: 6),
-          Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tint)),
+          Text(
+              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w600, color: tint)),
         ]),
       );
     }
@@ -57,9 +66,15 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
       final m = marks[bin]?[stage];
       if (m == null) return const SizedBox();
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        if (m.inTime != null) Padding(padding: const EdgeInsets.only(top: 6), child: timeChip(m.inTime!, isIn: true)),
+        if (m.inTime != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: timeChip(m.inTime!, isIn: true)),
         const SizedBox(height: 8),
-        if (m.outTime != null) Padding(padding: const EdgeInsets.only(top: 6), child: timeChip(m.outTime!, isIn: false)),
+        if (m.outTime != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: timeChip(m.outTime!, isIn: false)),
       ]);
     }
 
@@ -70,18 +85,27 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Card(
               color: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE2E8F0))),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFE2E8F0))),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(children: [
                   const Icon(Icons.calendar_today, size: 18),
                   const SizedBox(width: 8),
-                  Expanded(child: Text('${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}')),
+                  Expanded(
+                      child: Text(
+                          '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}')),
                   OutlinedButton(
                     onPressed: () async {
                       final now = DateTime.now();
-                      final picked = await showDatePicker(context: context, initialDate: _selectedDate, firstDate: DateTime(now.year - 1), lastDate: DateTime(now.year + 1));
-                      if (picked != null) setState(() => _selectedDate = picked);
+                      final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(now.year - 1),
+                          lastDate: DateTime(now.year + 1));
+                      if (picked != null)
+                        setState(() => _selectedDate = picked);
                     },
                     child: const Text('Chọn ngày'),
                   ),
@@ -100,10 +124,27 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(children: [
-                    Expanded(flex: 1, child: Text('Số thùng', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-                    Expanded(child: Text('Vận chuyển Gang', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-                    Expanded(child: Text('Gian chờ Thép', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
-                    Expanded(child: Text('Ra Luyện Thép', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+                    Expanded(
+                        flex: 1,
+                        child: Text('Số thùng',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14))),
+                    Expanded(
+                        child: Text('Vận chuyển Gang',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14))),
+                    Expanded(
+                        child: Text('Gian chờ Thép',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14))),
+                    Expanded(
+                        child: Text('Ra Luyện Thép',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14))),
                   ]),
                 ),
               ),
@@ -121,7 +162,12 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, 4))],
+                    boxShadow: const [
+                      BoxShadow(
+                          color: Color(0x0F000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 4))
+                    ],
                     color: Colors.white,
                   ),
                   child: Row(children: [
@@ -129,9 +175,12 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                       flex: 1,
                       child: Row(children: [
                         Chip(
-                          label: Text(b, style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
+                          label: Text(b,
+                              style: TextStyle(
+                                  color: theme.colorScheme.onPrimaryContainer)),
                           backgroundColor: Colors.white,
-                          shape: const StadiumBorder(side: BorderSide(color: Color(0xFFE2E8F0))),
+                          shape: const StadiumBorder(
+                              side: BorderSide(color: Color(0xFFE2E8F0))),
                         ),
                       ]),
                     ),
@@ -165,7 +214,8 @@ class HistoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox(
       height: height,
       child: Container(
@@ -173,7 +223,10 @@ class HistoryHeaderDelegate extends SliverPersistentHeaderDelegate {
           color: Colors.white,
           boxShadow: overlapsContent
               ? const [
-                  BoxShadow(color: Color(0x11000000), blurRadius: 6, offset: Offset(0, 2))
+                  BoxShadow(
+                      color: Color(0x11000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 2))
                 ]
               : null,
           border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
@@ -184,5 +237,6 @@ class HistoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      false;
 }
